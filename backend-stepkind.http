@@ -1,6 +1,31 @@
-@backend_stepkind_HostAddress = http://localhost:5016
+@backend_stepkind_HostAddress = http://localhost:5278
 
-GET {{backend_stepkind_HostAddress}}/weatherforecast/
-Accept: application/json
+### Create tutorial
+POST {{backend_stepkind_HostAddress}}/api/tutorials
+Content-Type: application/json
 
-###
+{
+  "id": "tut-001",
+  "name": "Intro a ASP.NET Core",
+  "url": "https://example.com/tutorial/aspnet-intro",
+  "description": "Tutorial básico de ASP.NET Core",
+  "transcript": "Este es el contenido completo del tutorial..."
+}
+
+### List tutorials
+GET {{backend_stepkind_HostAddress}}/api/tutorials
+
+### Get tutorial by id
+GET {{backend_stepkind_HostAddress}}/api/tutorials/tut-001
+
+### Reindex tutorial embeddings
+POST {{backend_stepkind_HostAddress}}/api/tutorials/tut-001/reindex
+
+### Semantic search
+POST {{backend_stepkind_HostAddress}}/api/search/semantic
+Content-Type: application/json
+
+{
+  "query": "cómo configurar EF Core con PostgreSQL",
+  "topK": 5
+}

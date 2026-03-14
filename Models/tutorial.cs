@@ -1,9 +1,6 @@
 namespace backend_stepkind.Models;
 
-public class Tutorial
+[Obsolete("Use Models/Tutorial.cs")]
+public class LegacyTutorialModel
 {
-    public required string Id { get; set; }
-    public required string Name { get; set; }
-
-    public required string Url { get; set; }
 }
