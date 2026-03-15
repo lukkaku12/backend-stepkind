@@ -4,6 +4,7 @@ using backend_stepkind.Models;
 using backend_stepkind.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
+using System.Globalization;
 
 namespace backend_stepkind.Services;
 
@@ -36,37 +37,44 @@ public class TutorialEmbeddingService : ITutorialEmbeddingService
         var tutorial = await _repository.GetByIdAsync(tutorialId, cancellationToken: cancellationToken)
             ?? throw new KeyNotFoundException($"Tutorial '{tutorialId}' was not found.");
 
-        tutorial.SearchContent = BuildSearchContent(tutorial.Name, tutorial.Description, tutorial.Transcript);
-        tutorial.UpdatedAt = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        var searchContent = BuildSearchContent(tutorial.Name, tutorial.Description, tutorial.Transcript);
 
-        var chunks = _textChunker.Chunk(tutorial.SearchContent);
+        var chunks = _textChunker.Chunk(searchContent);
 
-        var oldChunks = _dbContext.TutorialChunks.Where(x => x.TutorialId == tutorialId);
-        _dbContext.TutorialChunks.RemoveRange(oldChunks);
+        var createdChunkIds = new List<Guid>();
+        await using var tx = await _dbContext.Database.BeginTransactionAsync(CancellationToken.None);
 
-        var entities = new List<TutorialChunk>();
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $@"DELETE FROM ""TutorialChunks"" WHERE ""TutorialId"" = {tutorialId};",
+            CancellationToken.None);
+
         for (var i = 0; i < chunks.Count; i++)
         {
             var embedding = await _embeddingService.GenerateEmbeddingAsync(chunks[i], cancellationToken);
-            entities.Add(new TutorialChunk
-            {
-                Id = Guid.NewGuid(),
-                TutorialId = tutorialId,
-                ChunkIndex = i,
-                Content = chunks[i],
-                Embedding = new Vector(embedding),
-                CreatedAt = DateTime.UtcNow
-            });
+            var chunkId = Guid.NewGuid();
+            createdChunkIds.Add(chunkId);
+
+            var vectorLiteral = $"[{string.Join(",", embedding.Select(v => v.ToString("G9", CultureInfo.InvariantCulture)))}]";
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $@"INSERT INTO ""TutorialChunks"" (""Id"", ""TutorialId"", ""ChunkIndex"", ""Content"", ""Embedding"", ""CreatedAt"")
+                   VALUES ({chunkId}, {tutorialId}, {i}, {chunks[i]}, CAST({vectorLiteral} AS vector), {now});",
+                CancellationToken.None);
         }
 
-        await _dbContext.TutorialChunks.AddRangeAsync(entities, cancellationToken);
-        await _repository.UpdateAsync(tutorial, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $@"UPDATE ""Tutorials""
+               SET ""SearchContent"" = {searchContent},
+                   ""UpdatedAt"" = {now}
+               WHERE ""Id"" = {tutorialId};",
+            CancellationToken.None);
+
+        await tx.CommitAsync(CancellationToken.None);
 
         return new ReindexTutorialResponse
         {
             TutorialId = tutorialId,
-            ChunksCreated = entities.Count,
+            ChunksCreated = createdChunkIds.Count,
             ProcessedAt = DateTime.UtcNow
         };
     }

@@ -1,6 +1,9 @@
+using backend_stepkind.Config;
 using backend_stepkind.Data;
 using backend_stepkind.Extensions;
 using Microsoft.EntityFrameworkCore;
+
+DotEnvLoader.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 

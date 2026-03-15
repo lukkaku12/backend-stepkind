@@ -24,14 +24,14 @@ public class SemanticSearchService : ISemanticSearchService
         var rows = await _dbContext.SemanticSearchRows
             .FromSqlInterpolated($@"
                 SELECT 
-                    tc."TutorialId" AS "TutorialId",
-                    t."Name" AS "TutorialName",
-                    t."Url" AS "TutorialUrl",
-                    tc."Content" AS "MatchedChunk",
-                    (1 - (tc."Embedding" <=> {vector})) AS "Similarity"
-                FROM "TutorialChunks" tc
-                INNER JOIN "Tutorials" t ON t."Id" = tc."TutorialId"
-                ORDER BY tc."Embedding" <=> {vector}
+                    tc.""TutorialId"" AS ""TutorialId"",
+                    t.""Name"" AS ""TutorialName"",
+                    t.""Url"" AS ""TutorialUrl"",
+                    tc.""Content"" AS ""MatchedChunk"",
+                    (1 - (tc.""Embedding"" <=> {vector})) AS ""Similarity""
+                FROM ""TutorialChunks"" tc
+                INNER JOIN ""Tutorials"" t ON t.""Id"" = tc.""TutorialId""
+                ORDER BY tc.""Embedding"" <=> {vector}
                 LIMIT {request.TopK}")
             .AsNoTracking()
             .ToListAsync(cancellationToken);

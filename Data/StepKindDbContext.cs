@@ -28,8 +28,6 @@ public class StepKindDbContext : DbContext
             entity.Property(x => x.Url).HasMaxLength(1000).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(5000);
             entity.Property(x => x.SearchContent).IsRequired();
-            entity.Property(x => x.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
-            entity.Property(x => x.UpdatedAt).HasDefaultValueSql("timezone('utc', now())");
 
             entity.HasMany(x => x.Chunks)
                 .WithOne(x => x.Tutorial)
@@ -46,7 +44,6 @@ public class StepKindDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Content).IsRequired();
-            entity.Property(x => x.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
             entity.Property(x => x.Embedding)
                 .HasColumnType("vector(1536)")
                 .IsRequired();

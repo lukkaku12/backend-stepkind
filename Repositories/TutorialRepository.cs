@@ -51,5 +51,9 @@ public class TutorialRepository : ITutorialRepository
             .ToListAsync(cancellationToken);
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        => await _dbContext.SaveChangesAsync(cancellationToken);
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _dbContext.SaveChanges();
+        await Task.CompletedTask;
+    }
 }

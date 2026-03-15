@@ -33,6 +33,16 @@ public class OpenAiEmbeddingService : IEmbeddingService
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "embeddings");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
+        if (!string.IsNullOrWhiteSpace(_options.HttpReferer))
+        {
+            request.Headers.TryAddWithoutValidation("HTTP-Referer", _options.HttpReferer);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_options.AppName))
+        {
+            request.Headers.TryAddWithoutValidation("X-Title", _options.AppName);
+        }
+
         request.Content = new StringContent(JsonSerializer.Serialize(new
         {
             model = _options.EmbeddingModel,

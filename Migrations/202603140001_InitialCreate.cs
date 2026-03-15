@@ -1,4 +1,6 @@
 using System;
+using backend_stepkind.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Pgvector;
 
@@ -6,6 +8,8 @@ using Pgvector;
 
 namespace backend_stepkind.Migrations;
 
+[DbContext(typeof(StepKindDbContext))]
+[Migration("202603140001_InitialCreate")]
 public partial class InitialCreate : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
@@ -71,7 +75,7 @@ public partial class InitialCreate : Migration
 
         migrationBuilder.Sql(@"
             CREATE INDEX IF NOT EXISTS idx_tutorial_chunks_embedding_hnsw
-            ON \"TutorialChunks\" USING hnsw (\"Embedding\" vector_cosine_ops);");
+            ON ""TutorialChunks"" USING hnsw (""Embedding"" vector_cosine_ops);");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
