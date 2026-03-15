@@ -1,0 +1,14 @@
+.git
+.gitignore
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.cache
+*.log
+
+.env
+.env.*
+!.env.example
